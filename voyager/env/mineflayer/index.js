@@ -1,3 +1,4 @@
+const { mineflayer: mineflayerViewer } = require('prismarine-viewer'); // Add this line at the beginning of your file
 const fs = require("fs");
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -50,6 +51,7 @@ app.post("/start", (req, res) => {
     });
 
     bot.once("spawn", async () => {
+        mineflayerViewer(bot, { port: 3007, firstPerson: true });
         bot.removeListener("error", onConnectionFailed);
         let itemTicks = 1;
         if (req.body.reset === "hard") {

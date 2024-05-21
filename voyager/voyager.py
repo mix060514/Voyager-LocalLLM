@@ -12,6 +12,8 @@ from .agents import CriticAgent
 from .agents import CurriculumAgent
 from .agents import SkillManager
 
+from langchain_community.chat_models import ChatOllama
+
 
 # TODO: remove event memory
 class Voyager:
@@ -23,7 +25,7 @@ class Voyager:
         openai_api_key: str = None,
         env_wait_ticks: int = 20,
         env_request_timeout: int = 600,
-        max_iterations: int = 160,
+        max_iterations: int = 1600000000,
         reset_placed_if_failed: bool = False,
         action_agent_model_name: str = "gpt-4",
         action_agent_temperature: float = 0,
@@ -48,6 +50,8 @@ class Voyager:
         ckpt_dir: str = "ckpt",
         skill_library_dir: str = None,
         resume: bool = False,
+        use_ollama: bool = True,
+        ollama_model_name: str = 'llama3'
     ):
         """
         The main class for Voyager.
@@ -100,6 +104,14 @@ class Voyager:
         :param skill_library_dir: skill library dir
         :param resume: whether to resume from checkpoint
         """
+        # if use_ollama:
+        #     ollama_model_name = 'ollama'
+        #     action_agent_model_name = ollama_model_name
+        #     curriculum_agent_model_name = ollama_model_name
+        #     curriculum_agent_qa_model_name = ollama_model_name
+        #     critic_agent_model_name = ollama_model_name
+        #     skill_manager_model_name = ollama_model_name
+
         # init env
         self.env = VoyagerEnv(
             mc_port=mc_port,
@@ -151,6 +163,18 @@ class Voyager:
             ckpt_dir=skill_library_dir if skill_library_dir else ckpt_dir,
             resume=True if resume or skill_library_dir else False,
         )
+        if use_ollama:
+            llm = ChatOllama(
+                model=ollama_model_name,
+                temperature=0,
+                # request_timeout=request_timout,
+            )
+            self.action_agent.llm = llm
+            self.curriculum_agent.llm = llm
+            self.curriculum_agent.qa_llm = llm
+            self.critic_agent.llm = llm
+            self.skill_manager.llm = llm
+
         self.recorder = U.EventRecorder(ckpt_dir=ckpt_dir, resume=resume)
         self.resume = resume
 
@@ -319,7 +343,7 @@ class Voyager:
             task, context = self.curriculum_agent.propose_next_task(
                 events=self.last_events,
                 chest_observation=self.action_agent.render_chest_observation(),
-                max_retries=5,
+                max_retries=100,
             )
             print(
                 f"\033[35mStarting task {task} for at most {self.action_agent_task_max_retries} times\033[0m"

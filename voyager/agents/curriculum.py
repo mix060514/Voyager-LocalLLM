@@ -10,6 +10,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 
 class CurriculumAgent:
@@ -57,7 +58,11 @@ class CurriculumAgent:
         # vectordb for qa cache
         self.qa_cache_questions_vectordb = Chroma(
             collection_name="qa_cache_questions_vectordb",
-            embedding_function=OpenAIEmbeddings(),
+            embedding_function=HuggingFaceEmbeddings(
+                model_name="Snowflake/snowflake-arctic-embed-xs",
+                model_kwargs = {'device': 'cpu'},
+                encode_kwargs = {'normalize_embeddings': False},
+            ),
             persist_directory=f"{ckpt_dir}/curriculum/vectordb",
         )
         assert self.qa_cache_questions_vectordb._collection.count() == len(

@@ -3,6 +3,7 @@ import os
 import voyager.utils as U
 from langchain.chat_models import ChatOpenAI
 from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.vectorstores import Chroma
 
@@ -39,9 +40,18 @@ class SkillManager:
         self.ckpt_dir = ckpt_dir
         self.vectordb = Chroma(
             collection_name="skill_vectordb",
-            embedding_function=OpenAIEmbeddings(),
+            embedding_function=HuggingFaceEmbeddings(
+                model_name="Snowflake/snowflake-arctic-embed-xs",
+                model_kwargs = {'device': 'cpu'},
+                encode_kwargs = {'normalize_embeddings': False},
+            ),
             persist_directory=f"{ckpt_dir}/skill/vectordb",
         )
+        # self.vectordb = Chroma(
+        #     collection_name="skill_vectordb",
+        #     embedding_function=OpenAIEmbeddings(),
+        #     persist_directory=f"{ckpt_dir}/skill/vectordb",
+        # )
         assert self.vectordb._collection.count() == len(self.skills), (
             f"Skill Manager's vectordb is not synced with skills.json.\n"
             f"There are {self.vectordb._collection.count()} skills in vectordb but {len(self.skills)} skills in skills.json.\n"

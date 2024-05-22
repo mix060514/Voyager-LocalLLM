@@ -132,3 +132,5 @@ plot_iter.py
 .history/
 .github/
 .conda/
+script/skill_library/
+
